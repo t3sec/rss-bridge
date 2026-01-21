@@ -32,11 +32,31 @@ class HackeroneBlogBridge extends BridgeAbstract
                 continue;
             }
 
-            // Content / Summary
-            // The summary is typically in the "body" field
+            // Content from posting abstract
+            $item['content'] = '';
             $contentElement = $element->find('.field--name-body', 0);
             if ($contentElement) {
-                $item['content'] = trim($contentElement->plaintext);
+                $item['content'] .= trim($contentElement->plaintext);
+            }
+            // Content from full article
+            if (isset($item['uri'])) {
+                $item['content'] .= "<hr>\n\n";
+                $fullArticleHtml = getSimpleHTMLDOMCached($item['uri']);
+                if ($fullArticleHtml) {
+                    $fullContentElement = $fullArticleHtml->find('.field--name-body', 0);
+                    if ($fullContentElement) {
+                        // Use the innertext to include the HTML tags
+                        $item['content'] .= $fullContentElement->innertext;
+                    }
+                }
+            }
+
+            // Fallback to abstract if full content couldn't be fetched
+            if (!isset($item['content'])) {
+                $contentElement = $element->find('.field--name-body', 0);
+                if ($contentElement) {
+                    $item['content'] = trim($contentElement->plaintext);
+                }
             }
 
             // Timestamp
