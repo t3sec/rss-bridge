@@ -55,25 +55,29 @@ The project follows **PSR-12** with some specific modifications defined in `phpc
 - **Arrays**: Use short array syntax `[]`.
 - **Strings**: Prefer single quotes `'` unless double quotes are necessary (e.g., for variable interpolation).
 
-#### Bridge Development
-- Bridges must extend `BridgeAbstract`.
-- Key constants to define: `NAME`, `URI`, `DESCRIPTION`, `MAINTAINER`, `PARAMETERS`, `CACHE_TIMEOUT`.
-- The main logic resides in the `collectData()` method, where you populate `$this->items`.
-- Use helper functions like `getSimpleHTMLDOM($url)` or `getSimpleHTMLDOMCached($url, $timeout)` for fetching and parsing HTML.
-- **Common Helper Functions**:
-  - `urljoin($base, $rel)`: Safely resolve relative URLs.
-  - `defaultLinkTo($content, $server)`: Fix relative links and image sources in HTML content.
-  - `extractFromDelimiters($string, $start, $end)`: Extract data from strings between delimiters (useful for JSON-LD or scripts).
-  - `sanitize($content)`: Clean up HTML content.
-- **Feed Item Structure**: Bridges should produce items with keys such as `uri`, `title`, `timestamp`, `author`, `content`, `enclosures`, and `categories`.
+### Bridge Development
+- **Inheritance**: Bridges must extend `BridgeAbstract` or `FeedExpander`.
+- **Key Constants**: `NAME`, `URI`, `DESCRIPTION`, `MAINTAINER`, `PARAMETERS`, `CACHE_TIMEOUT`, `CONFIGURATION`, `DONATION_URI`.
+- **Main Logic**: Implement `collectData()` to populate `$this->items`.
+- **Standard Options**: Bridges can use `protected const LIMIT` for a standardized limit option.
+- **Feed Item Structure**: Items should have keys like `uri`, `title`, `timestamp`, `author`, `content`, `enclosures`, `categories`.
 
-#### FeedExpander Development
+### Helper Functions
+- `getSimpleHTMLDOM($url)`: Fetch and parse HTML.
+- `getSimpleHTMLDOMCached($url, $timeout)`: Fetch and parse HTML with caching.
+- `getContents($url)`: Fetch raw content from a URL.
+- `urljoin($base, $rel)`: Safely resolve relative URLs.
+- `defaultLinkTo($content, $server)`: Fix relative links and image sources in HTML.
+- `extractFromDelimiters($string, $start, $end)`: Extract data between delimiters.
+- `sanitize($content)`: Clean up HTML content.
+
+### FeedExpander Development
 Bridges can extend `FeedExpander` instead of `BridgeAbstract` to enrich existing RSS or Atom feeds.
 - Use `$this->collectExpandableDatas($url)` in `collectData()`.
 - Override `parseItem(array $item)` to modify or add data to each item (e.g., fetching the full article content).
 
 #### Best Practices
-- **Error Handling**: Use `throwClientException($message)` for user-side errors or `throwServerErrorException($message)` for server-side issues instead of generic exceptions.
+- **Error Handling**: Use `throwClientException($message)` for user-side errors or `throwServerException($message)` for server-side issues instead of generic exceptions.
 - **Type Hinting**: Use return type hints (e.g., `: void`, `: array`) to align with strict typing.
 - **Final Classes**: Use `final class` for bridge definitions if they are not intended to be extended.
 
