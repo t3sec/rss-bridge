@@ -32,27 +32,13 @@ class HackeroneBlogBridge extends BridgeAbstract
                 continue;
             }
 
-            // Content from posting abstract
-            $item['content'] = '';
-            $contentElement = $element->find('.field--name-body', 0);
-            if ($contentElement) {
-                $item['content'] .= trim($contentElement->plaintext);
-            }
             // Content from full article
             if (isset($item['uri'])) {
-                $item['content'] .= "<hr>\n\n";
-                $fullArticleHtml = getSimpleHTMLDOMCached($item['uri']);
-                if ($fullArticleHtml) {
-                    $fullContentElement = $fullArticleHtml->find('.field--name-body', 0);
-                    if ($fullContentElement) {
-                        // Use the innertext to include the HTML tags
-                        $item['content'] .= $fullContentElement->innertext;
-                    }
-                }
+                $item['content'] = $this->fetchFullContent($item['uri']);
             }
 
-            // Fallback to abstract if full content couldn't be fetched
-            if (!isset($item['content'])) {
+            // Fallback to content from abstract
+            if (empty($item['content'])) {
                 $contentElement = $element->find('.field--name-body', 0);
                 if ($contentElement) {
                     $item['content'] = trim($contentElement->plaintext);
@@ -80,5 +66,22 @@ class HackeroneBlogBridge extends BridgeAbstract
 
             $this->items[] = $item;
         }
+    }
+
+    private function fetchFullContent(string $url): string
+    {
+        $html = getSimpleHTMLDOMCached($url);
+
+        if (!$html) {
+            return '';
+        }
+
+        $fullContentElement = $html->find('.field--name-body', 0);
+        $content = '';
+        if ($fullContentElement) {
+            // Use the innertext to include the HTML tags
+            $content = $fullContentElement->innertext;
+        }
+        return $content;
     }
 }
