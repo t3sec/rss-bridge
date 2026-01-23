@@ -84,3 +84,4 @@ Bridges can extend `FeedExpander` instead of `BridgeAbstract` to enrich existing
 #### Debugging
 - Enable debug mode in `config.ini.php` by setting `[error] display_errors = true`.
 - Errors can be reported as feed items (default) or as HTTP error messages.
+- **Cache**: When working on a bridge, make sure that constant `CACHE_TIMEOUT` is temporarily set to `0` so that you don't work with cached data.
