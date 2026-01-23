@@ -33,17 +33,42 @@ final class JoeHirschBlogBridge extends BridgeAbstract
                 $item['enclosures'] = [$imageElement->src];
             }
 
-            // The website doesn't seem to have the full content or a summary in the card
-            // We could fetch the full article if needed, but let's start simple.
-            // The card has a hidden card-p which is empty in the HTML I saw.
-            $summaryElement = $element->find('p.card-p', 0);
-            if ($summaryElement && !empty(trim($summaryElement->plaintext))) {
-                $item['content'] = trim($summaryElement->plaintext);
-            } else {
-                $item['content'] = $item['title'] ?? '';
+            // Content from full article
+            if (isset($item['uri'])) {
+                $item['content'] = $this->fetchFullContent($item['uri']);
+            }
+
+            if (empty($item['content'])) {
+                $summaryElement = $element->find('p.card-p', 0);
+                if ($summaryElement && !empty(trim($summaryElement->plaintext))) {
+                    $item['content'] = trim($summaryElement->plaintext);
+                } else {
+                    $item['content'] = $item['title'] ?? '';
+                }
             }
 
             $this->items[] = $item;
         }
+    }
+
+    private function fetchFullContent(string $url): string
+    {
+        $html = getSimpleHTMLDOMCached($url);
+
+        if (!$html) {
+            return '';
+        }
+
+        $content = $html->find('div.blog-content', 0);
+        if (!$content) {
+            // Try another common selector if blog-content is not found directly
+            $content = $html->find('div.w-richtext', 0);
+        }
+
+        if (!$content) {
+            return '';
+        }
+
+        return defaultLinkTo($content->innertext, self::URI);
     }
 }
